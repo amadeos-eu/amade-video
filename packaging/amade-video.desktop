@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=amadeOS Video Player
+GenericName=Video Player
+Comment=Plays video files, internet video streams and DVDs
+Icon=amade-video
+Exec=/usr/bin/amade-video %U
+Terminal=false
+Categories=AudioVideo;Video;Player;
+MimeType=video/mp4;video/x-m4v;video/x-matroska;video/webm;video/x-msvideo;video/quicktime;video/mpeg;video/mp2t;video/ogg;video/x-ms-wmv;video/x-flv;video/3gpp;video/dv;application/x-cd-image;x-content/video-dvd;
+Keywords=video;movie;film;dvd;stream;player;mpv;
+StartupNotify=true
