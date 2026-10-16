@@ -33,7 +33,7 @@ copy protection is not allowed). Unencrypted DVDs (home videos, many TV recordin
 
 ## Architecture
 
-Java 21, Swing, Guice, JNA; same structure as [amade-audio](https://github.com/datazuul/amade-audio).
+Java 25, Swing, Guice, JNA; same structure as [amade-audio](https://github.com/datazuul/amade-audio).
 
 | Package | Content |
 |---------|---------|
@@ -54,7 +54,7 @@ when mpv reports a software renderer.
 
 ## Building and testing
 
-Requirements: Java 21 JDK; `libmpv2` to play; `dpkg-deb` for the Debian package.
+Requirements: Java 25 JDK; `libmpv2` to play; `dpkg-deb` for the Debian package.
 
 `amade-commons` is taken from JitPack. If it is checked out next to this repository
 (`../amade-commons`), Gradle builds that checkout instead.

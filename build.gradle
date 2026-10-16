@@ -10,7 +10,7 @@ def mainClassName = 'org.datazuul.amadeos.video.bootstrap.AmadeVideoApplication'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -155,7 +155,7 @@ Version: ${project.version}
 Section: video
 Priority: optional
 Architecture: all
-Depends: default-jre | openjdk-21-jre | java21-runtime, libmpv2
+Depends: openjdk-25-jre | java-runtime (>= 25), libmpv2
 Recommends: yt-dlp
 Suggests: libdvd-pkg
 Maintainer: amadeOS Project <developers@datazuul.com>
