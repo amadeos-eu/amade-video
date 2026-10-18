@@ -6,7 +6,7 @@ plugins {
 group = 'eu.amadeos'
 version = '0.1.0'
 
-def mainClassName = 'eu.amadeos.video.bootstrap.AmadeVideoApplication'
+def mainClassName = 'eu.amadeos.apps.video.bootstrap.AmadeVideoApplication'
 
 java {
     toolchain {
