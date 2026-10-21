@@ -1,7 +1,9 @@
 package eu.amadeos.apps.video.i18n;
 
+import eu.amadeos.apps.video.bootstrap.AmadeVideoApplication;
 import eu.amadeos.commons.i18n.Messages;
 import eu.amadeos.commons.i18n.Mnemonics;
+import eu.amadeos.commons.i18n.Texts;
 import eu.amadeos.commons.i18n.TranslationCheck;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TranslationTest {
     @Test
     void everyLanguageHasEveryText() {
-        assertEquals(Map.of(), TranslationCheck.problems(Texts.class, Texts.BUNDLE));
+        assertEquals(Map.of(), TranslationCheck.problems(AmadeVideoApplication.class, Texts.bundle()));
     }
 
     @Test
@@ -27,7 +29,7 @@ class TranslationTest {
                 List.of("menu.play-pause", "menu.stop", "menu.back", "menu.forward", "menu.previous-chapter",
                         "menu.next-chapter"));
         for (String language : List.of("en", "de", "fr", "es", "it")) {
-            Messages m = Messages.load(Texts.class, Texts.BUNDLE, Locale.of(language));
+            Messages m = Messages.load(AmadeVideoApplication.class, Texts.bundle(), Locale.of(language));
             for (List<String> menu : menus) {
                 Set<Character> letters = new HashSet<>();
                 for (String key : menu) {

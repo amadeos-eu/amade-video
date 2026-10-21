@@ -1,6 +1,6 @@
 package eu.amadeos.apps.video.ui.main;
 
-import static eu.amadeos.apps.video.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 import com.google.inject.Inject;
 import com.sun.jna.Native;

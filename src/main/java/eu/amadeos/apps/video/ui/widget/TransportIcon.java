@@ -1,6 +1,6 @@
 package eu.amadeos.apps.video.ui.widget;
 
-import static eu.amadeos.apps.video.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 import javax.swing.*;
 import java.awt.*;
