@@ -8,8 +8,10 @@ import eu.amadeos.apps.video.domain.PlayerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
@@ -39,6 +41,7 @@ public final class MpvPlayer implements AutoCloseable {
     private volatile boolean fastProfile;
     private Thread events;
 
+    // --8<-- [start:load]
     public MpvPlayer() {
         LibMpv lib = null;
         StringBuilder why = new StringBuilder();
@@ -54,6 +57,7 @@ public final class MpvPlayer implements AutoCloseable {
         this.unavailableReason = lib == null ? why.toString().strip() : "";
         if (lib == null) LOG.warn("libmpv is not installed:\n{}", unavailableReason);
     }
+    // --8<-- [end:load]
 
     /** False if libmpv is not installed; nothing can be played then. */
     public boolean isAvailable() {
@@ -70,6 +74,7 @@ public final class MpvPlayer implements AutoCloseable {
         return (v >> 16) + "." + (v & 0xFFFF);
     }
 
+    // --8<-- [start:attach]
     /**
      * Creates the player inside the given native window (X11 window id, HWND). The window must exist,
      * i.e. its component must be displayable.
@@ -85,17 +90,18 @@ public final class MpvPlayer implements AutoCloseable {
         if (h == null) throw new IllegalStateException("mpv_create failed");
         handle = h;
         option("wid", Long.toString(windowId));
-        Map<String, String> output = VideoOutput.forThisMachine();
+        Map<String, String> output = new LinkedHashMap<>(VideoOutput.forThisMachine());
+        Map<String, String> overrides = overrides();
+        output.keySet().removeAll(overrides.keySet());
         fastProfile = "fast".equals(output.get("profile"));
-        output.forEach(this::option);
+        output.forEach(this::outputOption);
         option("keep-open", "yes");
         option("idle", "yes");
         option("input-default-bindings", "no");
         option("input-vo-keyboard", "no");
         option("osd-level", "1");
         option("ytdl", "yes");
-        System.getProperties().stringPropertyNames().stream().filter(k -> k.startsWith(OVERRIDE_PREFIX))
-                .forEach(k -> option(k.substring(OVERRIDE_PREFIX.length()), System.getProperty(k)));
+        overrides.forEach(this::option);
         check(mpv.mpv_initialize(h), "mpv_initialize");
         mpv.mpv_request_log_messages(h, LOG.isDebugEnabled() ? "info" : "warn");
         mpv.mpv_observe_property(h, TIME, "time-pos", LibMpv.FORMAT_DOUBLE);
@@ -109,6 +115,7 @@ public final class MpvPlayer implements AutoCloseable {
         events = Thread.ofPlatform().daemon().name("mpv-events").start(this::eventLoop);
         LOG.info("libmpv {} attached to window 0x{}", apiVersion(), Long.toHexString(windowId));
     }
+    // --8<-- [end:attach]
 
     public PlayerState state() {
         return state;
@@ -154,6 +161,7 @@ public final class MpvPlayer implements AutoCloseable {
         command("stop");
     }
 
+    // --8<-- [start:close]
     @Override
     public synchronized void close() {
         Pointer h = handle;
@@ -169,9 +177,11 @@ public final class MpvPlayer implements AutoCloseable {
         handle = null;
         mpv.mpv_terminate_destroy(h);
     }
+    // --8<-- [end:close]
 
     // ---- events ----------------------------------------------------------------------------------
 
+    // --8<-- [start:event-loop]
     private void eventLoop() {
         while (running) {
             Pointer h = handle;
@@ -179,7 +189,9 @@ public final class MpvPlayer implements AutoCloseable {
             handle(MpvEvent.read(mpv.mpv_wait_event(h, 1.0)));
         }
     }
+    // --8<-- [end:event-loop]
 
+    // --8<-- [start:handle]
     void handle(MpvEvent event) {
         switch (event) {
             case MpvEvent.None n -> {
@@ -199,6 +211,7 @@ public final class MpvPlayer implements AutoCloseable {
             case MpvEvent.Other o -> LOG.debug("mpv event {}", mpv.mpv_event_name(o.id()));
         }
     }
+    // --8<-- [end:handle]
 
     static PlayerState propertyChanged(PlayerState st, MpvEvent.PropertyChange p) {
         Object v = p.value();
@@ -238,6 +251,7 @@ public final class MpvPlayer implements AutoCloseable {
         return l.prefix().startsWith("vo/gpu") && l.text().contains("software renderer");
     }
 
+    // --8<-- [start:update]
     private void update(UnaryOperator<PlayerState> change) {
         synchronized (stateLock) {
             PlayerState next = change.apply(state);
@@ -252,6 +266,7 @@ public final class MpvPlayer implements AutoCloseable {
             }
         }
     }
+    // --8<-- [end:update]
 
     // ---- helpers ---------------------------------------------------------------------------------
 
@@ -265,6 +280,28 @@ public final class MpvPlayer implements AutoCloseable {
     private void option(String name, String value) {
         check(mpv.mpv_set_option_string(handle, name, value), "option " + name + "=" + value);
     }
+
+    /** The {@code -Dmpv.<option>=<value>} system properties, which replace the defaults of the same name. */
+    static Map<String, String> overrides() {
+        Map<String, String> overrides = new TreeMap<>();
+        System.getProperties().stringPropertyNames().stream().filter(k -> k.startsWith(OVERRIDE_PREFIX))
+                .forEach(k -> overrides.put(k.substring(OVERRIDE_PREFIX.length()), System.getProperty(k)));
+        return overrides;
+    }
+
+    // --8<-- [start:output-option]
+    /**
+     * Sets a video output option. These depend on the mpv version (older ones know fewer GPU contexts), so
+     * a value this libmpv rejects is logged and its own default stays, instead of no player at all.
+     */
+    private void outputOption(String name, String value) {
+        int result = mpv.mpv_set_option_string(handle, name, value);
+        if (result < 0) {
+            LOG.warn("libmpv {} rejects {}={} ({}); using its default", apiVersion(), name, value,
+                    mpv.mpv_error_string(result));
+        }
+    }
+    // --8<-- [end:output-option]
 
     private void check(int result, String what) {
         if (result < 0) throw new IllegalStateException(what + ": " + mpv.mpv_error_string(result));

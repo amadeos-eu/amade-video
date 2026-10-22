@@ -33,6 +33,7 @@ class MpvPlayerTest {
         assertEquals("Ice Age", s.title());
     }
 
+    // --8<-- [start:eof]
     @Test
     void endOfFileWithKeepOpen() {
         PlayerState playing = PlayerState.loading("a").withStatus(PlayerState.Status.PLAYING);
@@ -43,11 +44,23 @@ class MpvPlayerTest {
         // eof-reached while loading does not end anything
         assertEquals(PlayerState.Status.LOADING, change(PlayerState.loading("b"), 6, true).status());
     }
+    // --8<-- [end:eof]
 
     @Test
     void recognisesTheSoftwareRendererWarning() {
         assertTrue(MpvPlayer.isSoftwareRenderer(new MpvEvent.Log("warn", "vo/gpu/opengl",
                 "Suspected software renderer or indirect context.")));
         assertFalse(MpvPlayer.isSoftwareRenderer(new MpvEvent.Log("warn", "vo/gpu/vaapi", "libva: vaGetDriverNames() failed")));
+    }
+
+    @Test
+    void systemPropertiesOverrideTheDefaults() {
+        System.setProperty("mpv.gpu-context", "auto");
+        try {
+            assertEquals("auto", MpvPlayer.overrides().get("gpu-context"));
+        } finally {
+            System.clearProperty("mpv.gpu-context");
+        }
+        assertFalse(MpvPlayer.overrides().containsKey("gpu-context"));
     }
 }
