@@ -3,7 +3,8 @@ package eu.amadeos.apps.video.ui.main;
 import static eu.amadeos.commons.i18n.Texts.tr;
 
 import eu.amadeos.apps.video.domain.PlayerState;
-import eu.amadeos.apps.video.ui.widget.TransportIcon;
+import eu.amadeos.commons.swing.TransportButtons;
+import eu.amadeos.commons.swing.TransportGlyph;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,8 +24,8 @@ final class ControlBar extends JPanel {
     final JLabel time = new JLabel("--:--");
     final JLabel chapter = new JLabel(" ");
     final JLabel status = new JLabel(" ");
-    private final Icon playIcon = new TransportIcon(TransportIcon.Kind.PLAY);
-    private final Icon pauseIcon = new TransportIcon(TransportIcon.Kind.PAUSE);
+    private final Icon playIcon = TransportButtons.NORMAL.icon(TransportGlyph.PLAY);
+    private final Icon pauseIcon = TransportButtons.NORMAL.icon(TransportGlyph.PAUSE);
     private double duration = -1;
     /** Set while the slider follows the player, so that does not count as the user seeking. */
     private boolean following;
@@ -32,12 +33,13 @@ final class ControlBar extends JPanel {
     ControlBar(MainPresenter p) {
         super(new BorderLayout(0, 4));
         setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
-        previous = TransportIcon.button(TransportIcon.Kind.PREVIOUS, () -> p.chapter(-1));
-        rewind = TransportIcon.button(TransportIcon.Kind.REWIND, () -> p.seekBy(-10));
-        playPause = TransportIcon.button(TransportIcon.Kind.PLAY, p::togglePause);
-        forward = TransportIcon.button(TransportIcon.Kind.FORWARD, () -> p.seekBy(10));
-        next = TransportIcon.button(TransportIcon.Kind.NEXT, () -> p.chapter(1));
-        stop = TransportIcon.button(TransportIcon.Kind.STOP, p::stop);
+        TransportButtons transport = TransportButtons.NORMAL;
+        previous = transport.button(TransportGlyph.PREVIOUS, () -> p.chapter(-1));
+        rewind = transport.button(TransportGlyph.REWIND, () -> p.seekBy(-10));
+        playPause = transport.button(TransportGlyph.PLAY, p::togglePause);
+        forward = transport.button(TransportGlyph.FORWARD, () -> p.seekBy(10));
+        next = transport.button(TransportGlyph.NEXT, () -> p.chapter(1));
+        stop = transport.button(TransportGlyph.STOP, p::stop);
 
         seek.setOpaque(false);
         seek.setFocusable(false);
@@ -59,7 +61,7 @@ final class ControlBar extends JPanel {
 
         JPanel row = new JPanel(new BorderLayout(10, 0));
         row.setOpaque(false);
-        row.add(TransportIcon.bar(previous, rewind, playPause, forward, next, stop), BorderLayout.WEST);
+        row.add(TransportButtons.bar(previous, rewind, playPause, forward, next, stop), BorderLayout.WEST);
         row.add(seek, BorderLayout.CENTER);
         row.add(clock, BorderLayout.EAST);
         add(row, BorderLayout.NORTH);
