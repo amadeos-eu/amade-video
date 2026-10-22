@@ -69,6 +69,7 @@ public sealed interface MediaSource {
         }
     }
 
+    // --8<-- [start:parse]
     /**
      * From a command-line argument: {@code dvd://[title]} (drive from {@link #defaultDvdDevice()}), a URL
      * with a scheme, a DVD image ({@code .iso}) or folder (with or named {@code VIDEO_TS}), or a video file.
@@ -85,6 +86,7 @@ public sealed interface MediaSource {
         if (isDvd(path)) return new Dvd(a, 0);
         return new File(path);
     }
+    // --8<-- [end:parse]
 
     /** An ISO image, a VIDEO_TS folder or a folder containing one (as copied from a DVD). */
     static boolean isDvd(Path path) {
