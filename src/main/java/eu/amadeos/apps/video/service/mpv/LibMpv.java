@@ -23,6 +23,7 @@ interface LibMpv extends Library {
     int EVENT_PLAYBACK_RESTART = 21;
     int EVENT_PROPERTY_CHANGE = 22;
 
+    // --8<-- [start:offsets]
     // Offsets in mpv_event { int event_id; int error; uint64_t reply_userdata; void *data; }
     int EVENT_ID = 0;
     int EVENT_ERROR = 4;
@@ -39,10 +40,12 @@ interface LibMpv extends Library {
     // mpv_event_end_file { int reason; int error; ... }
     int END_FILE_REASON = 0;
     int END_FILE_ERROR = 4;
+    // --8<-- [end:offsets]
 
     /** Library names to try: Debian/Ubuntu (libmpv2, with and without -dev), Windows, macOS. */
     String[] NAMES = {"mpv", "libmpv.so.2", "libmpv-2", "mpv-2"};
 
+    // --8<-- [start:functions]
     long mpv_client_api_version();
 
     Pointer mpv_create();
@@ -71,6 +74,7 @@ interface LibMpv extends Library {
     Pointer mpv_wait_event(Pointer handle, double timeout);
 
     void mpv_wakeup(Pointer handle);
+    // --8<-- [end:functions]
 
     String mpv_error_string(int error);
 

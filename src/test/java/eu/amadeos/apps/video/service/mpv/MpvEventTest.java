@@ -26,6 +26,7 @@ class MpvEventTest {
                 MpvEvent.read(event(LibMpv.EVENT_PROPERTY_CHANGE, 2, property("duration", LibMpv.FORMAT_NONE, null))));
     }
 
+    // --8<-- [start:native-memory]
     @Test
     void endFileReasonAndError() {
         Memory data = new Memory(16);
@@ -33,6 +34,7 @@ class MpvEventTest {
         data.setInt(LibMpv.END_FILE_ERROR, -13);
         assertEquals(new MpvEvent.EndFile(MpvEvent.END_ERROR, -13), MpvEvent.read(event(LibMpv.EVENT_END_FILE, 0, data)));
     }
+    // --8<-- [end:native-memory]
 
     @Test
     void logMessagesAndSimpleEvents() {

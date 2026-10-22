@@ -2,6 +2,7 @@ package eu.amadeos.apps.video.ui.main;
 
 import java.awt.*;
 
+// --8<-- [start:canvas]
 /**
  * The native window mpv renders into (through its {@code wid} option). It is heavyweight on purpose: Swing
  * cannot paint over the picture, so the controls sit around it. While mpv shows nothing, the canvas paints
@@ -41,3 +42,4 @@ final class VideoCanvas extends Canvas {
         paint(g);
     }
 }
+// --8<-- [end:canvas]

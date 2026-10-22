@@ -2,6 +2,7 @@ package eu.amadeos.apps.video.domain;
 
 import java.util.Objects;
 
+// --8<-- [start:state]
 /**
  * What the player is doing, as the UI shows it. Immutable; the player publishes a new state on every change.
  *
@@ -25,6 +26,7 @@ public record PlayerState(Status status, String title, double position, double d
     }
 
     public static final PlayerState IDLE = new PlayerState(Status.IDLE, "", -1, -1, false, -1, 0, "");
+    // --8<-- [end:state]
 
     public PlayerState {
         Objects.requireNonNull(status, "status");

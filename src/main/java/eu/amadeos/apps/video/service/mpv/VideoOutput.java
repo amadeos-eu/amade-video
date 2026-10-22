@@ -17,6 +17,7 @@ final class VideoOutput {
     private VideoOutput() {
     }
 
+    // --8<-- [start:options]
     static Map<String, String> options(String osName, boolean gpu) {
         Map<String, String> options = new LinkedHashMap<>();
         if (osName.startsWith("Windows") || osName.startsWith("Mac")) {
@@ -30,6 +31,7 @@ final class VideoOutput {
         if (!gpu) options.put("profile", "fast");
         return options;
     }
+    // --8<-- [end:options]
 
     static Map<String, String> forThisMachine() {
         String os = System.getProperty("os.name", "");

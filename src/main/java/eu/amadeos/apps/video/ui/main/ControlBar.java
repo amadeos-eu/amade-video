@@ -42,12 +42,14 @@ final class ControlBar extends JPanel {
         seek.setOpaque(false);
         seek.setFocusable(false);
         seek.getAccessibleContext().setAccessibleName(tr("transport.position"));
+        // --8<-- [start:seek]
         // Seek when the knob is let go, not on every pixel of a drag.
         seek.addChangeListener(e -> {
             if (!following && !seek.getValueIsAdjusting() && duration > 0) {
                 p.seekTo(duration * seek.getValue() / SCALE);
             }
         });
+        // --8<-- [end:seek]
 
         time.setFont(new Font(Font.MONOSPACED, Font.BOLD, 13));
         JPanel clock = new JPanel(new BorderLayout(10, 0));

@@ -41,6 +41,7 @@ public final class MainPresenter {
         this.executor = executor;
     }
 
+    // --8<-- [start:start]
     /** Shows the window and, once the player runs, opens the first argument (file, URL or dvd://). */
     public void start(List<String> args) {
         window = new MainWindow(this);
@@ -76,6 +77,7 @@ public final class MainPresenter {
             }
         });
     }
+    // --8<-- [end:start]
 
     private void show(PlayerState s) {
         window.controls.show(s);

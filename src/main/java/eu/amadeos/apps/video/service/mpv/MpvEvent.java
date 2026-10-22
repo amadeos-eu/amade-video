@@ -37,6 +37,7 @@ sealed interface MpvEvent {
     record Other(int id) implements MpvEvent {
     }
 
+    // --8<-- [start:read]
     /** Reads the event {@code mpv_wait_event} returned; layouts from mpv/client.h, see {@link LibMpv}. */
     static MpvEvent read(Pointer event) {
         int id = event.getInt(LibMpv.EVENT_ID);
@@ -55,6 +56,7 @@ sealed interface MpvEvent {
             default -> new Other(id);
         };
     }
+    // --8<-- [end:read]
 
     private static Object value(int format, Pointer data) {
         if (data == null) return null;
