@@ -1,6 +1,7 @@
 package eu.amadeos.apps.video.service.mpv;
 
 import eu.amadeos.apps.video.domain.PlayerState;
+import eu.amadeos.commons.mpv.MpvEvent;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,22 +46,4 @@ class MpvPlayerTest {
         assertEquals(PlayerState.Status.LOADING, change(PlayerState.loading("b"), 6, true).status());
     }
     // --8<-- [end:eof]
-
-    @Test
-    void recognisesTheSoftwareRendererWarning() {
-        assertTrue(MpvPlayer.isSoftwareRenderer(new MpvEvent.Log("warn", "vo/gpu/opengl",
-                "Suspected software renderer or indirect context.")));
-        assertFalse(MpvPlayer.isSoftwareRenderer(new MpvEvent.Log("warn", "vo/gpu/vaapi", "libva: vaGetDriverNames() failed")));
-    }
-
-    @Test
-    void systemPropertiesOverrideTheDefaults() {
-        System.setProperty("mpv.gpu-context", "auto");
-        try {
-            assertEquals("auto", MpvPlayer.overrides().get("gpu-context"));
-        } finally {
-            System.clearProperty("mpv.gpu-context");
-        }
-        assertFalse(MpvPlayer.overrides().containsKey("gpu-context"));
-    }
 }

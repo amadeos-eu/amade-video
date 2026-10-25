@@ -39,7 +39,7 @@ Java 25, Swing, Guice, JNA; same structure as [amade-audio](https://github.com/d
 |---------|---------|
 | `bootstrap` | `AmadeVideoApplication` (entry point), `VideoModule` |
 | `domain` | `MediaSource` (file, URL, DVD; what mpv's `loadfile` gets), `PlayerState` (immutable, what the UI shows) |
-| `service.mpv` | `MpvPlayer`: libmpv via JNA (`LibMpv`), event thread, observed properties → `PlayerState`; `MpvEvent` reads `mpv_event` structs; `VideoOutput` picks the video output |
+| `service.mpv` | `MpvPlayer`: observed properties and events → `PlayerState`, on top of `Mpv` of amade-commons (`eu.amadeos.commons.mpv`: libmpv via JNA, event thread, video output) |
 | `ui.main` | `MainWindow` (menu bar, `VideoCanvas`, `ControlBar`), `MainPresenter` |
 | `ui.widget` | `TransportIcon` (as in amade-audio) |
 
@@ -49,7 +49,7 @@ Swing cannot paint over the picture, so the controls sit around it. Findings fro
 [docs/spike.md](docs/spike.md).
 
 Without a GPU (QEMU, Xvfb) mpv's high-quality scalers do not compile on software OpenGL and the picture
-stays blank; `MpvPlayer` switches to mpv's `fast` profile when there is no `/dev/dri` render node or
+stays blank; amade-commons' `Mpv` switches to mpv's `fast` profile when there is no `/dev/dri` render node or
 when mpv reports a software renderer.
 
 ## Building and testing
