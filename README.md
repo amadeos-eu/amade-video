@@ -65,7 +65,7 @@ Requirements: Java 25 JDK; `libmpv2` to play; `dpkg-deb` for the Debian package.
 ./gradlew run --args="dvd://"          # play the DVD in /dev/sr0 (or /dev/dvd)
 ./gradlew run --args=/path/film.iso    # a DVD image (paths with spaces: start the jar directly)
 ./gradlew run -Dmpv.ao=null            # any mpv option as -Dmpv.<option>=<value>
-./gradlew deb                          # build/distributions/amade-video_0.1.0_all.deb
+./gradlew deb                          # build/distributions/amade-video_0.0.0~dev.0_all.deb
 ./gradlew installToAmadeOs             # copy the .deb into ../amadeos/config/packages.chroot/
 ```
 
