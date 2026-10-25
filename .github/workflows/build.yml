@@ -41,7 +41,8 @@ jobs:
           count=$(grep -ho 'tests="[0-9]*"' build/test-results/test/*.xml | grep -o '[0-9]*' | paste -sd+ | bc)
           skipped=$(grep -ho 'skipped="[0-9]*"' build/test-results/test/*.xml | grep -o '[0-9]*' | paste -sd+ | bc)
           echo "Tests run: $count, skipped: $skipped"
-          test "$count" -ge 20
+          # The tests of the libmpv binding itself are in amade-commons (eu.amadeos.commons.mpv).
+          test "$count" -ge 15
           test "$skipped" -eq 0
       - name: Package
         run: ./gradlew jar deb --no-daemon -PappVersion=${{ steps.version.outputs.version }}

@@ -46,4 +46,39 @@ class MpvPlayerTest {
         assertEquals(PlayerState.Status.LOADING, change(PlayerState.loading("b"), 6, true).status());
     }
     // --8<-- [end:eof]
+
+    @Test
+    void aFileThatLoadsPlays() {
+        MpvPlayer player = new MpvPlayer();
+        player.handle(new MpvEvent.StartFile());
+        assertEquals(PlayerState.Status.LOADING, player.state().status());
+        player.handle(new MpvEvent.FileLoaded());
+        assertEquals(PlayerState.Status.PLAYING, player.state().status());
+    }
+
+    @Test
+    void anErrorBecomesTheFailedState() {
+        MpvPlayer player = new MpvPlayer();
+        player.handle(new MpvEvent.EndFile(MpvEvent.END_ERROR, -13));
+        assertEquals(PlayerState.Status.FAILED, player.state().status());
+    }
+
+    @Test
+    void stopGoesBackToIdle() {
+        MpvPlayer player = new MpvPlayer();
+        player.handle(new MpvEvent.FileLoaded());
+        player.handle(new MpvEvent.EndFile(MpvEvent.END_STOP, 0));
+        assertEquals(PlayerState.IDLE, player.state());
+    }
+
+    @Test
+    void listenersGetEveryNewState() {
+        MpvPlayer player = new MpvPlayer();
+        java.util.List<PlayerState.Status> seen = new java.util.ArrayList<>();
+        player.addListener(st -> seen.add(st.status()));
+        player.handle(new MpvEvent.StartFile());
+        player.handle(new MpvEvent.FileLoaded());
+        player.handle(new MpvEvent.FileLoaded());
+        assertEquals(java.util.List.of(PlayerState.Status.LOADING, PlayerState.Status.PLAYING), seen);
+    }
 }
