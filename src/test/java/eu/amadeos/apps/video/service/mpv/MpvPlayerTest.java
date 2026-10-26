@@ -1,6 +1,7 @@
 package eu.amadeos.apps.video.service.mpv;
 
 import eu.amadeos.apps.video.domain.PlayerState;
+import eu.amadeos.commons.mpv.MpvEvent;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,20 +48,37 @@ class MpvPlayerTest {
     // --8<-- [end:eof]
 
     @Test
-    void recognisesTheSoftwareRendererWarning() {
-        assertTrue(MpvPlayer.isSoftwareRenderer(new MpvEvent.Log("warn", "vo/gpu/opengl",
-                "Suspected software renderer or indirect context.")));
-        assertFalse(MpvPlayer.isSoftwareRenderer(new MpvEvent.Log("warn", "vo/gpu/vaapi", "libva: vaGetDriverNames() failed")));
+    void aFileThatLoadsPlays() {
+        MpvPlayer player = new MpvPlayer();
+        player.handle(new MpvEvent.StartFile());
+        assertEquals(PlayerState.Status.LOADING, player.state().status());
+        player.handle(new MpvEvent.FileLoaded());
+        assertEquals(PlayerState.Status.PLAYING, player.state().status());
     }
 
     @Test
-    void systemPropertiesOverrideTheDefaults() {
-        System.setProperty("mpv.gpu-context", "auto");
-        try {
-            assertEquals("auto", MpvPlayer.overrides().get("gpu-context"));
-        } finally {
-            System.clearProperty("mpv.gpu-context");
-        }
-        assertFalse(MpvPlayer.overrides().containsKey("gpu-context"));
+    void anErrorBecomesTheFailedState() {
+        MpvPlayer player = new MpvPlayer();
+        player.handle(new MpvEvent.EndFile(MpvEvent.END_ERROR, -13));
+        assertEquals(PlayerState.Status.FAILED, player.state().status());
+    }
+
+    @Test
+    void stopGoesBackToIdle() {
+        MpvPlayer player = new MpvPlayer();
+        player.handle(new MpvEvent.FileLoaded());
+        player.handle(new MpvEvent.EndFile(MpvEvent.END_STOP, 0));
+        assertEquals(PlayerState.IDLE, player.state());
+    }
+
+    @Test
+    void listenersGetEveryNewState() {
+        MpvPlayer player = new MpvPlayer();
+        java.util.List<PlayerState.Status> seen = new java.util.ArrayList<>();
+        player.addListener(st -> seen.add(st.status()));
+        player.handle(new MpvEvent.StartFile());
+        player.handle(new MpvEvent.FileLoaded());
+        player.handle(new MpvEvent.FileLoaded());
+        assertEquals(java.util.List.of(PlayerState.Status.LOADING, PlayerState.Status.PLAYING), seen);
     }
 }
