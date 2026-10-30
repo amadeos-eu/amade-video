@@ -1,9 +1,9 @@
 # amade-video
 
-**Video Player** for [amadeOS](https://github.com/datazuul/amadeos): plays video files, internet video
+**Video Player** for [amadeOS](https://github.com/amadeos-eu/amadeos): plays video files, internet video
 streams and DVDs in a Motif/CDE-styled window. Playback is done by [libmpv](https://mpv.io) (FFmpeg,
 libdvdnav), embedded into the Swing window; the rest is Java on
-[amade-commons](https://github.com/datazuul/amade-commons) like the other amadeOS applications.
+[amade-commons](https://github.com/amadeos-eu/amade-commons) like the other amadeOS applications.
 
 Status: **skeleton** (step 2). Opening and playing works; the CDE-style interface, DVD title lists,
 audio/subtitle tracks, fullscreen and volume come next (see [Roadmap](#roadmap)).
@@ -37,7 +37,7 @@ copy protection is not allowed). Unencrypted DVDs (home videos, many TV recordin
 
 ## Architecture
 
-Java 25, Swing, Guice, JNA; same structure as [amade-audio](https://github.com/datazuul/amade-audio).
+Java 25, Swing, Guice, JNA; same structure as [amade-audio](https://github.com/amadeos-eu/amade-audio).
 
 | Package | Content |
 |---------|---------|
