@@ -51,8 +51,8 @@
     <category>Player</category>
   </categories>
 
-  <url type="homepage">https://github.com/datazuul/amade-video</url>
-  <url type="bugtracker">https://github.com/datazuul/amade-video/issues</url>
+  <url type="homepage">https://github.com/amadeos-eu/amade-video</url>
+  <url type="bugtracker">https://github.com/amadeos-eu/amade-video/issues</url>
   <developer id="eu.amadeos">
     <name>amadeOS Project</name>
   </developer>
@@ -64,7 +64,7 @@
       <caption xml:lang="fr">Lecture d'un fichier vidéo</caption>
       <caption xml:lang="es">Reproduciendo un archivo de vídeo</caption>
       <caption xml:lang="it">Riproduzione di un file video</caption>
-      <image>https://raw.githubusercontent.com/datazuul/amade-video/main/docs/screenshots/amade-video.png</image>
+      <image>https://raw.githubusercontent.com/amadeos-eu/amade-video/main/docs/screenshots/amade-video.png</image>
     </screenshot>
   </screenshots>
 
