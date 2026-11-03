@@ -5,7 +5,7 @@ streams and DVDs in a Motif/CDE-styled window. Playback is done by [libmpv](http
 libdvdnav), embedded into the Swing window; the rest is Java on
 [amade-commons](https://github.com/amadeos-eu/amade-commons) like the other amadeOS applications.
 
-Status: **skeleton** (step 2). Opening and playing works; the CDE-style interface, DVD title lists,
+Status: **skeleton** (step 2). Opening and playing works, DVDs with a title menu; the CDE-style interface,
 audio/subtitle tracks, fullscreen and volume come next (see [Roadmap](#roadmap)).
 
 Platforms: **Linux only for now** (amadeOS, Debian and Ubuntu with `libmpv2`). The code would load
@@ -18,10 +18,17 @@ FFmpeg libraries with jpackage, which amade-video does not do yet. The CI builds
 |--------|-----|-------|
 | **Files** | *File → Open File...*, command line, desktop entry | everything FFmpeg decodes: MP4, MKV, WebM, AVI, MOV, MPEG-2, ... |
 | **Streams** | *File → Open URL...* | HTTP(S) files, HLS (`.m3u8`), DASH; YouTube and other sites with `yt-dlp` installed |
-| **DVDs** | *File → Open DVD...*, `dvd://[title]`, an `.iso` image or a `VIDEO_TS` folder | titles and chapters, no DVD menus; encrypted DVDs need libdvdcss (see below) |
+| **DVDs** | *File → Open DVD...*, `dvd://[title]`, an `.iso` image or a `VIDEO_TS` folder | starts with the main film (longest title); *DVD* menu lists the titles with their lengths; chapters; no DVD menus; encrypted DVDs need libdvdcss (see below) |
 
 Controls: play/pause (Space), stop (S), back/forward 10 s (←/→), previous/next chapter (Page Up/Down),
-position slider. Texts in English, German, French, Spanish and Italian, following the desktop language.
+position slider.
+
+**Putting in a DVD:** while the Video Player is open it looks at the drive every 3 seconds. When a
+video DVD (one with a `VIDEO_TS` folder) is put in and nothing else is playing, its main film starts.
+*DVD → Play DVDs When Inserted* turns this off (saved in `~/.config/amadeos/video/video.properties`).
+Linux only; the disc is read once, without mounting it.
+
+Texts in English, German, French, Spanish and Italian, following the desktop language.
 
 ### Encrypted DVDs
 
@@ -42,8 +49,9 @@ Java 25, Swing, Guice, JNA; same structure as [amade-audio](https://github.com/a
 | Package | Content |
 |---------|---------|
 | `bootstrap` | `AmadeVideoApplication` (entry point), `VideoModule` |
-| `domain` | `MediaSource` (file, URL, DVD; what mpv's `loadfile` gets), `PlayerState` (immutable, what the UI shows) |
+| `domain` | `MediaSource` (file, URL, DVD; what mpv's `loadfile` gets), `PlayerState` (immutable, what the UI shows), `DiscTitle` (a DVD title from mpv's edition list) |
 | `service.mpv` | `MpvPlayer`: observed properties and events → `PlayerState`, on top of `Mpv` of amade-commons (`eu.amadeos.commons.mpv`: libmpv via JNA, event thread, video output) |
+| `service.disc` | `DvdWatcher` (polls the drive, reports a video DVD put in), `VideoDiscProbe` (VIDEO_TS in the ISO 9660 root, disc present from `/sys/block`) |
 | `ui.main` | `MainWindow` (menu bar, `VideoCanvas`, `ControlBar`), `MainPresenter` |
 | `ui.widget` | `TransportIcon` (as in amade-audio) |
 
@@ -82,7 +90,7 @@ Sound & Video drawer.
 1. ~~Spike: libmpv in a Swing window, files, streams, DVD~~ (done, [docs/spike.md](docs/spike.md))
 2. ~~Skeleton: application, player service, window, packaging, CI~~ (this version)
 3. CDE-style interface: monitor frame, transport and LCD display in the amade-audio style
-4. DVD title and chapter lists, recent files and URLs, playlist, drag and drop
+4. ~~DVD title list, main film on insert~~ (done); chapter list, recent files and URLs, playlist, drag and drop
 5. Audio and subtitle tracks, fullscreen, volume, remembering the position per file
 6. Windows: bundled `libmpv-2.dll`, jpackage installer
 
