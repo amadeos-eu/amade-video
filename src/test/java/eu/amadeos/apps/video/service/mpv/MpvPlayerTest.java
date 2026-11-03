@@ -21,12 +21,14 @@ class MpvPlayerTest {
         s = change(s, 5, 12L);
         s = change(s, 4, 3L);
         s = change(s, 7, "Ice Age");
+        s = change(s, 8, 2L);
         assertEquals(61.5, s.position());
         assertEquals(5400.0, s.duration());
         assertTrue(s.paused());
         assertEquals(12, s.chapters());
         assertEquals(3, s.chapter());
         assertEquals("Ice Age", s.title());
+        assertEquals(2, s.discTitle());
         // Unavailable values reset, an empty title keeps the old one
         s = change(s, 2, null);
         s = change(s, 7, "");

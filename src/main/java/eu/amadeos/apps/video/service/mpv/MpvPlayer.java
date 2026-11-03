@@ -1,6 +1,7 @@
 package eu.amadeos.apps.video.service.mpv;
 
 import com.google.inject.Singleton;
+import eu.amadeos.apps.video.domain.DiscTitle;
 import eu.amadeos.apps.video.domain.MediaSource;
 import eu.amadeos.apps.video.domain.PlayerState;
 import eu.amadeos.commons.mpv.LibMpv;
@@ -9,6 +10,7 @@ import eu.amadeos.commons.mpv.MpvEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +29,16 @@ import java.util.function.UnaryOperator;
 public final class MpvPlayer implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(MpvPlayer.class);
     // reply_userdata of the observed properties
-    private static final long TIME = 1, DURATION = 2, PAUSE = 3, CHAPTER = 4, CHAPTERS = 5, EOF = 6, TITLE = 7;
+    private static final long TIME = 1, DURATION = 2, PAUSE = 3, CHAPTER = 4, CHAPTERS = 5, EOF = 6, TITLE = 7,
+            DISC_TITLE = 8, DISC_TITLES = 9;
 
     private final Mpv mpv = new Mpv();
     private final List<Consumer<PlayerState>> listeners = new CopyOnWriteArrayList<>();
     /** Guards state updates; not the player's monitor, which close() holds while joining the event thread. */
     private final Object stateLock = new Object();
     private volatile PlayerState state = PlayerState.IDLE;
+    /** What was opened last; a DVD title is chosen on the same drive. */
+    private volatile MediaSource source;
 
     /** False if libmpv is not installed; nothing can be played then. */
     public boolean isAvailable() {
@@ -69,6 +74,9 @@ public final class MpvPlayer implements AutoCloseable {
         mpv.observe(CHAPTERS, "chapters", LibMpv.FORMAT_INT64);
         mpv.observe(EOF, "eof-reached", LibMpv.FORMAT_FLAG);
         mpv.observe(TITLE, "media-title", LibMpv.FORMAT_STRING);
+        // DVD titles are editions to mpv
+        mpv.observe(DISC_TITLE, "current-edition", LibMpv.FORMAT_INT64);
+        mpv.observe(DISC_TITLES, "editions", LibMpv.FORMAT_INT64);
     }
 
     public PlayerState state() {
@@ -82,6 +90,7 @@ public final class MpvPlayer implements AutoCloseable {
 
     public void open(MediaSource source) {
         if (!mpv.isAttached()) return;
+        this.source = source;
         if (source instanceof MediaSource.Dvd dvd) mpv.setProperty("dvd-device", dvd.device());
         update(s -> PlayerState.loading(source.displayName()));
         command("loadfile", source.target(), "replace");
@@ -111,6 +120,16 @@ public final class MpvPlayer implements AutoCloseable {
         command("add", "chapter", Integer.toString(delta));
     }
 
+    /** Plays another title of the DVD that is open; does nothing without a DVD. */
+    public void playDiscTitle(DiscTitle title) {
+        if (source instanceof MediaSource.Dvd dvd) open(new MediaSource.Dvd(dvd.device(), title.number()));
+    }
+
+    /** The DVD drive, folder or image that is open, or null. */
+    public MediaSource.Dvd dvd() {
+        return source instanceof MediaSource.Dvd dvd ? dvd : null;
+    }
+
     public void stop() {
         command("stop");
     }
@@ -134,6 +153,10 @@ public final class MpvPlayer implements AutoCloseable {
                 case MpvEvent.END_STOP, MpvEvent.END_QUIT -> PlayerState.IDLE;
                 default -> st;
             });
+            case MpvEvent.PropertyChange p when p.id() == DISC_TITLES -> {
+                List<DiscTitle> titles = discTitles(p.value() instanceof Long n ? n.intValue() : 0);
+                update(st -> st.withDiscTitles(titles));
+            }
             case MpvEvent.PropertyChange p -> update(st -> propertyChanged(st, p));
             default -> LOG.debug("mpv event {}", event);
         }
@@ -147,6 +170,7 @@ public final class MpvPlayer implements AutoCloseable {
         if (p.id() == PAUSE) return st.withPaused(Boolean.TRUE.equals(v));
         if (p.id() == CHAPTER) return st.withChapter(v instanceof Long l ? l.intValue() : -1);
         if (p.id() == CHAPTERS) return st.withChapters(v instanceof Long l ? l.intValue() : 0);
+        if (p.id() == DISC_TITLE) return st.withDiscTitle(v instanceof Long l ? l.intValue() : -1);
         if (p.id() == TITLE && v instanceof String t && !t.isBlank()) return st.withTitle(t);
         if (p.id() == EOF) {
             // keep-open: at the end mpv pauses on the last picture instead of ending the file
@@ -174,6 +198,14 @@ public final class MpvPlayer implements AutoCloseable {
     // --8<-- [end:update]
 
     // ---- helpers ---------------------------------------------------------------------------------
+
+    /** The titles of a DVD from mpv's edition list; empty for other media (Matroska editions). */
+    private List<DiscTitle> discTitles(int count) {
+        List<DiscTitle> titles = new ArrayList<>();
+        if (!(source instanceof MediaSource.Dvd)) return titles;
+        for (int i = 0; i < count; i++) DiscTitle.parse(mpv.property("edition-list/" + i + "/title")).ifPresent(titles::add);
+        return titles;
+    }
 
     private void command(String... args) {
         mpv.command(args);

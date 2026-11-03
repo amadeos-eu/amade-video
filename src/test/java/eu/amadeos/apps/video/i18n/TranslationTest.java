@@ -24,7 +24,7 @@ class TranslationTest {
     @Test
     void mnemonicsAreUniqueWithinEachMenu() {
         List<List<String>> menus = List.of(
-                List.of("menu.file", "menu.playback", "menu.help"),
+                List.of("menu.file", "menu.playback", "menu.dvd", "menu.help"),
                 List.of("menu.open-file", "menu.open-url", "menu.open-dvd", "menu.quit"),
                 List.of("menu.play-pause", "menu.stop", "menu.back", "menu.forward", "menu.previous-chapter",
                         "menu.next-chapter"));

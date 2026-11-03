@@ -4,10 +4,14 @@ import static eu.amadeos.commons.i18n.Texts.tr;
 
 import com.google.inject.Inject;
 import com.sun.jna.Native;
+import eu.amadeos.commons.config.AppDirectories;
+import eu.amadeos.commons.config.PropertiesFile;
 import eu.amadeos.commons.i18n.Mnemonics;
 import eu.amadeos.commons.swing.EdtExecutor;
+import eu.amadeos.apps.video.domain.DiscTitle;
 import eu.amadeos.apps.video.domain.MediaSource;
 import eu.amadeos.apps.video.domain.PlayerState;
+import eu.amadeos.apps.video.service.disc.DvdWatcher;
 import eu.amadeos.apps.video.service.mpv.MpvPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +24,7 @@ import java.awt.event.WindowEvent;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
 /** Connects the main window to the player. Runs on the EDT; player states arrive through the EDT executor. */
@@ -31,14 +36,19 @@ public final class MainPresenter {
     private final MpvPlayer player;
     private final EdtExecutor edt;
     private final ExecutorService executor;
+    private final Path settingsFile;
+    private final Properties settings;
+    private final DvdWatcher dvdWatcher = new DvdWatcher(Path.of(MediaSource.defaultDvdDevice()));
     private MainWindow window;
     private Path lastFolder;
 
     @Inject
-    public MainPresenter(MpvPlayer player, EdtExecutor edt, ExecutorService executor) {
+    public MainPresenter(MpvPlayer player, EdtExecutor edt, ExecutorService executor, AppDirectories dirs) {
         this.player = player;
         this.edt = edt;
         this.executor = executor;
+        this.settingsFile = dirs.configFile("video.properties");
+        this.settings = PropertiesFile.load(settingsFile);
     }
 
     // --8<-- [start:start]
@@ -70,6 +80,7 @@ public final class MainPresenter {
                     MediaSource source = MediaSource.parse(args.get(0));
                     edt.execute(() -> open(source));
                 }
+                dvdWatcher.start(drive -> edt.execute(() -> dvdInserted(drive)));
             } catch (RuntimeException e) {
                 LOG.error("Cannot start the player", e);
                 edt.execute(() -> JOptionPane.showMessageDialog(window, tr("player.failed", e.getMessage()),
@@ -81,6 +92,7 @@ public final class MainPresenter {
 
     private void show(PlayerState s) {
         window.controls.show(s);
+        window.showDiscTitles(s);
         window.video.setHint(switch (s.status()) {
             case IDLE, LOADING, FAILED -> ControlBar.statusText(s);
             case PLAYING, ENDED -> "";
@@ -115,6 +127,35 @@ public final class MainPresenter {
                 JOptionPane.QUESTION_MESSAGE, null, null, MediaSource.defaultDvdDevice());
         if (device != null && !device.toString().isBlank()) open(new MediaSource.Dvd(device.toString(), 0));
     }
+
+    // ---- DVD --------------------------------------------------------------------------------------
+
+    void playDiscTitle(DiscTitle title) {
+        player.playDiscTitle(title);
+    }
+
+    boolean playDvdsWhenInserted() {
+        return !"false".equals(settings.getProperty("dvd.play-when-inserted"));
+    }
+
+    boolean canWatchDvdDrive() {
+        return dvdWatcher.isSupported();
+    }
+
+    void setPlayDvdsWhenInserted(boolean on) {
+        settings.setProperty("dvd.play-when-inserted", Boolean.toString(on));
+        executor.execute(() -> PropertiesFile.store(settingsFile, settings, "Video Player"));
+    }
+
+    // --8<-- [start:inserted]
+    /** A video DVD was put in: its main film starts, unless something else is playing. */
+    void dvdInserted(Path drive) {
+        PlayerState s = player.state();
+        boolean busy = (s.status() == PlayerState.Status.PLAYING && !s.paused()) || s.status() == PlayerState.Status.LOADING;
+        if (!playDvdsWhenInserted() || busy) return;
+        open(new MediaSource.Dvd(drive.toString(), 0));
+    }
+    // --8<-- [end:inserted]
 
     private Path startFolder() {
         if (lastFolder != null && Files.isDirectory(lastFolder)) return lastFolder;
@@ -154,6 +195,7 @@ public final class MainPresenter {
     }
 
     void quit() {
+        dvdWatcher.close();
         player.close();
         for (Window w : Window.getWindows()) w.dispose();
         executor.shutdownNow();
