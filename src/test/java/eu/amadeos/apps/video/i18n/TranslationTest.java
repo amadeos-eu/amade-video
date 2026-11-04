@@ -27,7 +27,8 @@ class TranslationTest {
                 List.of("menu.file", "menu.playback", "menu.dvd", "menu.help"),
                 List.of("menu.open-file", "menu.open-url", "menu.open-dvd", "menu.quit"),
                 List.of("menu.play-pause", "menu.stop", "menu.back", "menu.forward", "menu.previous-chapter",
-                        "menu.next-chapter"));
+                        "menu.next-chapter"),
+                List.of("menu.dvd-help", "menu.about"));
         for (String language : List.of("en", "de", "fr", "es", "it")) {
             Messages m = Messages.load(AmadeVideoApplication.class, Texts.bundle(), Locale.of(language));
             for (List<String> menu : menus) {

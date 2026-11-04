@@ -11,6 +11,7 @@ import eu.amadeos.commons.swing.EdtExecutor;
 import eu.amadeos.apps.video.domain.DiscTitle;
 import eu.amadeos.apps.video.domain.MediaSource;
 import eu.amadeos.apps.video.domain.PlayerState;
+import eu.amadeos.apps.video.service.disc.DvdDecryption;
 import eu.amadeos.apps.video.service.disc.DvdWatcher;
 import eu.amadeos.apps.video.service.mpv.MpvPlayer;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.nio.file.Files;
@@ -39,8 +41,11 @@ public final class MainPresenter {
     private final Path settingsFile;
     private final Properties settings;
     private final DvdWatcher dvdWatcher = new DvdWatcher(Path.of(MediaSource.defaultDvdDevice()));
+    private final DvdDecryption decryption = new DvdDecryption();
     private MainWindow window;
     private Path lastFolder;
+    /** The failure of the DVD that was opened last has been explained, so it is not explained again. */
+    private boolean decryptionExplained;
 
     @Inject
     public MainPresenter(MpvPlayer player, EdtExecutor edt, ExecutorService executor, AppDirectories dirs) {
@@ -91,6 +96,7 @@ public final class MainPresenter {
     // --8<-- [end:start]
 
     private void show(PlayerState s) {
+        if (s.status() == PlayerState.Status.LOADING) decryptionExplained = false;
         window.controls.show(s);
         window.showDiscTitles(s);
         window.video.setHint(switch (s.status()) {
@@ -98,6 +104,12 @@ public final class MainPresenter {
             case PLAYING, ENDED -> "";
         });
         window.setTitle(s.title().isEmpty() ? tr("app.title") : s.title() + " - " + tr("app.title"));
+        if (s.status() == PlayerState.Status.FAILED && player.dvd() != null && !decryptionExplained
+                && !decryption.isInstalled()) {
+            decryptionExplained = true;
+            // after this state has been shown, not in the middle of it
+            SwingUtilities.invokeLater(() -> explainDecryption(tr("dvd-css.failed")));
+        }
     }
 
     // ---- open ------------------------------------------------------------------------------------
@@ -156,6 +168,32 @@ public final class MainPresenter {
         open(new MediaSource.Dvd(drive.toString(), 0));
     }
     // --8<-- [end:inserted]
+
+    // --8<-- [start:decryption]
+    /** Help → Encrypted DVDs: whether libdvdcss is installed, and how to install it. */
+    void dvdHelp() {
+        explainDecryption(decryption.isInstalled() ? tr("dvd-css.installed") : tr("dvd-css.missing"));
+    }
+
+    /** Explains libdvdcss below the given first paragraph; the install commands can be copied. */
+    private void explainDecryption(String lead) {
+        JTextArea commands = new JTextArea(DvdDecryption.INSTALL_COMMANDS);
+        commands.setEditable(false);
+        commands.setFont(new Font(Font.MONOSPACED, Font.PLAIN, commands.getFont().getSize()));
+        commands.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+        JPanel commandBox = new JPanel(new BorderLayout());
+        commandBox.setOpaque(false);
+        commandBox.setBorder(BorderFactory.createEmptyBorder(4, 0, 8, 0));
+        commandBox.add(commands);
+        Object[] message = {lead + "\n\n" + tr("dvd-css.text"), commandBox, tr("dvd-css.after")};
+        String copy = tr("dvd-css.copy"), close = tr("dvd-css.close");
+        int choice = JOptionPane.showOptionDialog(window, message, tr("dvd-css.title"), JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE, null, new Object[]{copy, close}, close);
+        if (choice == 0) {
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(DvdDecryption.INSTALL_COMMANDS), null);
+        }
+    }
+    // --8<-- [end:decryption]
 
     private Path startFolder() {
         if (lastFolder != null && Files.isDirectory(lastFolder)) return lastFolder;

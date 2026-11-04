@@ -39,6 +39,11 @@ amade-video neither ships nor installs it. On Debian/Ubuntu:
 sudo apt install libdvd-pkg && sudo dpkg-reconfigure libdvd-pkg
 ```
 
+Debian has no libdvdcss package; libdvd-pkg (contrib) downloads its source from VideoLAN and builds it on
+the computer, which is what `dpkg-reconfigure` does. *Help → Encrypted DVDs...* says whether libdvdcss is
+installed and shows these commands (with a button that copies them), and the same help opens by itself when
+a DVD fails to play while libdvdcss is missing.
+
 Whether you may use libdvdcss depends on where you live (in some countries, e.g. Germany, circumventing
 copy protection is not allowed). Unencrypted DVDs (home videos, many TV recordings) play without it.
 

@@ -47,6 +47,8 @@ final class MainWindow extends JFrame {
         playback.add(item("menu.next-chapter", KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0), () -> p.chapter(1)));
         showDiscTitles(PlayerState.IDLE);
         JMenu help = menu("menu.help");
+        help.add(item("menu.dvd-help", null, p::dvdHelp));
+        help.addSeparator();
         help.add(item("menu.about", null, p::about));
         menus.add(file);
         menus.add(playback);
