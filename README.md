@@ -5,6 +5,8 @@ streams and DVDs in a Motif/CDE-styled window. Playback is done by [libmpv](http
 libdvdnav), embedded into the Swing window; the rest is Java on
 [amade-commons](https://github.com/amadeos-eu/amade-commons) like the other amadeOS applications.
 
+![Video Player](docs/screenshots/amade-video.png)
+
 Status: **skeleton** (step 2). Opening and playing works, DVDs with a title menu; the CDE-style interface,
 audio/subtitle tracks, fullscreen and volume come next (see [Roadmap](#roadmap)).
 
